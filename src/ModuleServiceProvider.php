@@ -5,60 +5,60 @@ use Illuminate\Support\ServiceProvider;
 
 class ModuleServiceProvider extends ServiceProvider {
 
-	protected $files;
+    protected $files;
 
-	/**
-	 * Bootstrap the application services.
-	 *
-	 * @return void
-	 */
-	public function boot() {
+    /**
+     * Bootstrap the application services.
+     *
+     * @return void
+     */
+    public function boot() {
 
-		if(is_dir(app_path().'/Modules/')) {
-			$modules = config("modules.enable") ?: array_map('class_basename', $this->files->directories(app_path().'/Modules/'));
-			foreach($modules as $module)  {
-				// Allow routes to be cached
-				if (!$this->app->routesAreCached()) {
-					$routes = app_path() . '/Modules/' . $module . '/routes.php';
-					if($this->files->exists($routes)) include $routes;
-				}
-				$helper = app_path().'/Modules/'.$module.'/helper.php';
-				$views  = app_path().'/Modules/'.$module.'/Views';
-				$trans  = app_path().'/Modules/'.$module.'/Translations';
+        if(is_dir(app_path().'/Modules/')) {
+            $modules = config("modules.enable") ?: array_map('class_basename', $this->files->directories(app_path().'/Modules/'));
+            foreach($modules as $module)  {
+                // Allow routes to be cached
+                if (!$this->app->routesAreCached()) {
+                    $routes = app_path() . '/Modules/' . $module . '/routes.php';
+                    if($this->files->exists($routes)) include $routes;
+                }
+                $helper = app_path().'/Modules/'.$module.'/helper.php';
+                $views  = app_path().'/Modules/'.$module.'/Views';
+                $trans  = app_path().'/Modules/'.$module.'/Translations';
+                $trans  = app_path().'/Modules/'.$module.'/Repositories';
 
-				if($this->files->exists($helper)) include $helper;
-				if($this->files->isDirectory($views)) $this->loadViewsFrom($views, $module);
-				if($this->files->isDirectory($trans)) $this->loadTranslationsFrom($trans, $module);
-			}
-		}
+                if($this->files->exists($helper)) include $helper;
+                if($this->files->isDirectory($views)) $this->loadViewsFrom($views, $module);
+                if($this->files->isDirectory($trans)) $this->loadTranslationsFrom($trans, $module);
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * Register the application services.
-	 *
-	 * @return void
-	 */
-	public function register() {
+    /**
+     * Register the application services.
+     *
+     * @return void
+     */
+    public function register() {
 
-		$this->files = new Filesystem;
-		$this->registerMakeCommand();
-	}
+        $this->files = new Filesystem;
+        $this->registerMakeCommand();
+    }
 
-	/**
-	 * Register the "make:module" console command.
-	 *
-	 * @return Console\ModuleMakeCommand
-	 */
-	protected function registerMakeCommand() {
+    /**
+     * Register the "make:module" console command.
+     *
+     * @return Console\ModuleMakeCommand
+     */
+    protected function registerMakeCommand() {
 
-		$this->commands('modules.make');
-		
-		$bind_method = method_exists($this->app, 'bindShared') ? 'bindShared' : 'singleton';
+        $this->commands('modules.make');
+        $bind_method = method_exists($this->app, 'bindShared') ? 'bindShared' : 'singleton';
 
-		$this->app->{$bind_method}('modules.make', function($app) {
-			return new Console\ModuleMakeCommand($this->files);
-		});
-	}
+        $this->app->{$bind_method}('modules.make', function($app) {
+            return new Console\ModuleMakeCommand($this->files);
+        });
+    }
 
 }
